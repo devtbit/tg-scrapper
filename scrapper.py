@@ -11,7 +11,7 @@ from utils import clean_prefix, create_dirs, is_in_range, load_range_params, upd
 class Scrapper:
 
     def __init__(self,
-        target_groups,
+        target_groups=[],
         s3_upload=False,
         bucket_name=None,
         post_cleanup=False,
@@ -19,7 +19,7 @@ class Scrapper:
     ):
         self.telegram = Telegram()
         self.target_groups = target_groups
-
+        self.bucket = None
         if s3_upload:
             self.bucket = S3(bucket_name)
         self.post_cleanup = post_cleanup
@@ -52,7 +52,6 @@ class Scrapper:
     def create_group_workspace(self,
         group,
     ):
-        group = clean_prefix(group)
         self.set_target(group)
         directory, fileprefix, prefix = self.get_workspace()
         media = f"{fileprefix}_media"
@@ -117,3 +116,16 @@ class Scrapper:
     async def scrape_groups(self, verbose=False):
         for group in self.target_groups:
             await self.scrape_group(group, verbose=verbose)
+
+    async def identify(self, phone_number, verbose=False):
+        try:
+            entity = await self.telegram.client.get_entity(phone_number)
+        except Exception as e:
+            if "Cannot find" in str(e):
+                print("User not found")
+                return None
+            else:
+                raise e
+
+        if verbose: print(entity.username)
+        return entity.username

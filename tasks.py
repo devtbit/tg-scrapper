@@ -6,6 +6,19 @@ from invoke import task
 from scrapper import Scrapper
 from telegram import Telegram
 
+@task
+def identify(c,
+    phone_number,
+):
+    """
+    Identifies a phone number against a Telegram user.
+    """
+    scrapper = Scrapper()
+    with scrapper.telegram.client:
+        scrapper.telegram.client.loop.run_until_complete(
+            scrapper.identify(phone_number, verbose=True)
+        )
+
 @task(help={
     'from_date': "Date to start scraping from (YYYY-MM-DD)",
     'to_date': "Date to end the scraping (YYYY-MM-DD)",
