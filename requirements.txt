@@ -1,0 +1,4 @@
+telethon
+pandas
+numpy
+boto3
