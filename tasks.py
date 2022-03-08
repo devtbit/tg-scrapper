@@ -4,6 +4,7 @@ import os
 from invoke import task
 
 from scrapper import Scrapper
+from telegram import Telegram
 
 @task(help={
     'from_date': "Date to start scraping from (YYYY-MM-DD)",
@@ -28,12 +29,7 @@ def scrape_groups(c,
     given date range.
     """
     groups = [g for g in targets.split(',')]
-    credentials = {
-        'api_phone_number': os.environ['API_PHONE_NUMBER'],
-        'api_id': os.environ['API_ID'],
-        'api_hash': os.environ['API_HASH'],
-    }
-
+    credentials = Telegram.get_credentials()
     scrapper = Scrapper(
         credentials,
         groups,
@@ -47,3 +43,17 @@ def scrape_groups(c,
         scrapper.tg.client.loop.run_until_complete(
             scrapper.scrape_groups(verbose=verbose)
         )
+
+@task
+def verify_session(c):
+    """
+    Verifies the session with a code sent through Telegram.
+    Requires manual user input.
+    """
+    credentials = Telegram.get_credentials()
+    return Telegram(
+        credentials['api_phone_number'],
+        credentials['api_id'],
+        credentials['api_hash'],
+        verify=True
+    )

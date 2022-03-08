@@ -72,3 +72,10 @@ class Telegram:
         media_path = await message.download_media(file=location)
         base_name = os.path.basename(media_path)
         return media_path, base_name
+
+    def get_credentials():
+        return {
+            'api_phone_number': os.environ['API_PHONE_NUMBER'],
+            'api_id': os.environ['API_ID'],
+            'api_hash': os.environ['API_HASH'],
+        }
