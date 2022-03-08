@@ -32,7 +32,17 @@ class Scrapper:
         self.timestamp = datetime.datetime.now().strftime("%Y_%m_%d-%H_%M")
         self.group = None
 
-    def set_date_range(self, params):
+    def set_date_range(self, from_date, to_date):
+        fd = from_date.split('-')
+        td = to_date.split('-')
+        params = {
+            'FROM_YEAR': fd[0],
+            'FROM_MONTH': fd[1],
+            'FROM_DAY': fd[2],
+            'TO_YEAR': td[0],
+            'TO_MONTH': td[1],
+            'TO_DAY': td[2],
+        }
         self.date_range = load_range_params(params)
 
     def set_target(self, group):
