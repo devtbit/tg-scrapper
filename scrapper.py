@@ -11,18 +11,13 @@ from utils import clean_prefix, create_dirs, is_in_range, load_range_params, upd
 class Scrapper:
 
     def __init__(self,
-        credentials,
         target_groups,
         s3_upload=False,
         bucket_name=None,
         post_cleanup=False,
         date_range=None,
     ):
-        self.tg = Telegram(
-            credentials['api_phone_number'],
-            credentials['api_id'],
-            credentials['api_hash'],
-        )
+        self.telegram = Telegram()
         self.target_groups = target_groups
 
         if s3_upload:
@@ -48,7 +43,7 @@ class Scrapper:
     def set_target(self, group):
         self.group = group
 
-    def get_fileprefix(self, data_dir="./data"):
+    def get_workspace(self, data_dir="./data"):
         if not self.group: raise Exception('set target first')
         directory = f"{data_dir}/{self.group}"
         prefix = f"{self.group}_{str(self.timestamp)}"
@@ -59,51 +54,66 @@ class Scrapper:
     ):
         group = clean_prefix(group)
         self.set_target(group)
-        directory, fileprefix, prefix = self.get_fileprefix()
+        directory, fileprefix, prefix = self.get_workspace()
         media = f"{fileprefix}_media"
         create_dirs([media])
         return directory, fileprefix, prefix
 
     def iter_group(self):
-        return self.tg.iter_chat(self.group)
+        return self.telegram.iter_chat(self.group)
+
+    def is_in_scope(self, timestamp):
+        return is_in_range(self.date_range, timestamp)
+
+    def teardown_workspace(self):
+        if self.post_cleanup:
+            directory, _, _ = self.get_workspace()
+            shutil.rmtree(directory)
+
 
     async def handle_media(self, message):
         filename = None
         if message.media:
-            _, fileprefix, prefix = self.get_fileprefix()
-            media, filename = await self.tg.download_message_media(message, f"{fileprefix}_media")
+            _, fileprefix, prefix = self.get_workspace()
+            media, filename = await self.telegram.download_message_media(message, f"{fileprefix}_media")
             object_name = f"{self.group}/{prefix}_media/{filename}"
             if self.bucket:
                 self.bucket.upload(object_name, media)
         return filename
 
-    def is_in_scope(self, timestamp):
-        return is_in_range(self.date_range, timestamp)
+    async def process_message(self, message, verbose=False):
+        data, timestamp = self.telegram.process_message(message)
+        
+        if not self.is_in_scope(timestamp): return False, None
+        
+        media = await self.handle_media(message)
+        data[-1] = media
+        if verbose: print(data)
+        return True, data
+
+    async def scrape_group(self, group, verbose=False):
+        if group not in self.target_groups: raise Exception('group not in targets')
+        if verbose: print(f"processing {group}")
+        directory, fileprefix, prefix = self.create_group_workspace(group)
+        csv_archive = f"{fileprefix}_archive.csv"
+        rows = []
+        try:
+            async for message in self.iter_group():
+                if message is None: continue
+                in_scope, data = await self.process_message(message, verbose=verbose)
+                if in_scope:
+                    rows.append(data)
+                    update_csv(rows, csv_archive)
+        except Exception as e:
+            print(e)
+            raise Exception('failed to scrape groups')
+            
+        if self.bucket:
+            self.bucket.upload(f"{group}/{prefix}_archive.csv", csv_archive)
+
+            
+        if verbose: print(f"completed {group}")
 
     async def scrape_groups(self, verbose=False):
         for group in self.target_groups:
-            if verbose: print(f"processing {group}")
-            directory, fileprefix, prefix = self.create_group_workspace(group)
-            csv_archive = f"{fileprefix}_archive.csv"
-            rows = []
-            try:
-                async for message in self.iter_group():
-                    if message is not None:
-                        data, timestamp = self.tg.process_message(message)
-                        if self.is_in_scope(timestamp):
-                            media = await self.handle_media(message)
-                            data[-1] = media
-                            if verbose: print(data)
-                            rows.append(data)
-                            update_csv(rows, csv_archive)
-            except Exception as e:
-                print(e)
-                raise Exception('failed to scrape groups')
-            
-            if self.bucket:
-                self.bucket.upload(f"{group}/{prefix}_archive.csv", csv_archive)
-
-            if self.post_cleanup:
-                shutil.rmtree(directory)
-            
-            if verbose: print(f"completed {group}")
+            await self.scrape_group(group, verbose=verbose)

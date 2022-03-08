@@ -11,12 +11,17 @@ from utils import process_date
 
 class Telegram:
     def __init__(self,
-            phone_number,
-            api_id,
-            api_hash,
+            credentials=None,
             verify=False
         ):
-        client = TelegramClient(phone_number, api_id, api_hash)
+        if credentials is None:
+            credentials = Telegram.get_credentials()
+
+        client = TelegramClient(
+            credentials['api_phone_number'],
+            credentials['api_id'],
+            credentials['api_hash'],
+        )
         client.connect()
 
         if not client.is_user_authorized():

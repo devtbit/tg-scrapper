@@ -25,13 +25,12 @@ def scrape_groups(c,
         verbose=False,
 ):
     """
-    Scrapes all the messages of a list of groups between the
-    given date range.
+    Scrapes all the messages of a list of Telegram groups between the
+    given date range. Groups must be either public or with access given to the
+    current user.
     """
     groups = [g for g in targets.split(',')]
-    credentials = Telegram.get_credentials()
     scrapper = Scrapper(
-        credentials,
         groups,
         s3_upload=upload,
         bucket_name=bucket,
@@ -39,8 +38,8 @@ def scrape_groups(c,
     )
     scrapper.set_date_range(from_date, to_date)
 
-    with scrapper.tg.client:
-        scrapper.tg.client.loop.run_until_complete(
+    with scrapper.telegram.client:
+        scrapper.telegram.client.loop.run_until_complete(
             scrapper.scrape_groups(verbose=verbose)
         )
 
@@ -50,10 +49,4 @@ def verify_session(c):
     Verifies the session with a code sent through Telegram.
     Requires manual user input.
     """
-    credentials = Telegram.get_credentials()
-    return Telegram(
-        credentials['api_phone_number'],
-        credentials['api_id'],
-        credentials['api_hash'],
-        verify=True
-    )
+    return Telegram(verify=True)
