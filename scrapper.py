@@ -98,7 +98,7 @@ class Scrapper:
         return directory, fileprefix, prefix
 
     def iter_group(self):
-        return self.telegram.iter_chat(self.group)
+        return self.telegram.iter_chat(self.group_entity)
 
     def is_in_scope(self, timestamp):
         return is_in_range(self.date_range, timestamp)
@@ -133,7 +133,7 @@ class Scrapper:
         if verbose: print(f"processing {group}")
         directory, fileprefix, prefix = self.create_group_workspace(group)
         csv_archive = f"{fileprefix}_archive.csv"
-        self.dump_members()
+        await self.dump_members()
         rows = []
         try:
             async for message in self.iter_group():

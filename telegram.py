@@ -66,6 +66,8 @@ class Telegram:
                     group == g.username # or
                 )
             ):
+                if type(g).__name__ == "ChatForbidden":
+                    raise Exception('ChatForbidden is not supported for scrapping')
                 return g
         return None
 
@@ -91,9 +93,11 @@ class Telegram:
                 'message': message.text,
             }
 
-        return [self.current_group,
+        return [self.current_group.id,
                 message.id,
-                message.from_id,
+                message.from_id.user_id 
+                    if type(message.from_id).__name__ == "PeerUser" 
+                    else message.from_id,
                 sender_name,
                 f"\"{message.text}\"",
                 date,
