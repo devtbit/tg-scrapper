@@ -79,8 +79,10 @@ class Scrapper:
         members = await self.get_group_members(limit=limit)
         if len(members) > 0:
             update_csv(members, csv_archive, columns=['username','id','name','group'])
+            if self.bucket:
+                self.bucket.upload(f"{self.group}/{prefix}_members_archive.csv", csv_archive)
         else:
-            print("Nothing to dump")
+            print("memberlist not available")
 
     def get_workspace(self, data_dir="./data"):
         if not self.group: raise Exception('set target first')
