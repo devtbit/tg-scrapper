@@ -67,7 +67,7 @@ def scrape_groups(c,
     """
     Scrapes all the messages of a list of Telegram groups between the
     given date range. Groups must be either public or with access given to the
-    current user. If member list is available it will also be fetched.
+    current user. If member list is available it will also be dumped.
     """
     groups = [g for g in targets.split(',')]
     scrapper = Scrapper(

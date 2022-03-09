@@ -33,7 +33,7 @@ class Telegram:
         self.client = client
         self.groups = self.fetch_chat_groups()
 
-    def fetch_chat_groups(self, offset_date=None, offset_id=0, limit=200, megagroup=False):
+    def fetch_chat_groups(self, offset_date=None, offset_id=0, limit=200):
         result = self.client(GetDialogsRequest(
             offset_date=offset_date,
             offset_id=offset_id,
@@ -41,13 +41,6 @@ class Telegram:
             limit=limit,
             hash=0,
         ))
-        if megagroup:
-            chats = []
-            for c in result.chats:
-                print(c)
-                if type(c).__name__ != "ChatForbidden" and c.megagroup == True:
-                    chats.append(c)
-            return chats
         return result.chats
 
     def get_groups(self, megagroup=False):

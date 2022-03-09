@@ -53,12 +53,10 @@ class Scrapper:
     def list_groups(self, megagroup):
         groups = self.get_groups(megagroup=megagroup)
         for group in groups:
-            if type(group).__name__ == "ChatForbidden":
+            if type(group).__name__ == "ChatForbidden" or group.username is None:
                 print(f"({group.id}) {group.title}")
-            elif group.username is not None:
-                print(group.username)
             else:
-                print(f"({group.id}) {group.title}")
+                print(group.username)
 
     async def get_group_members(self, limit=None):
         if not self.group_entity: raise Exception('set target first')
@@ -100,6 +98,7 @@ class Scrapper:
         return directory, fileprefix, prefix
 
     def iter_group(self):
+        if not self.group_entity: raise Exception('set target first')
         return self.telegram.iter_chat(self.group_entity)
 
     def is_in_scope(self, timestamp):
