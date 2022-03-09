@@ -4,7 +4,7 @@ import os
 import datetime
 import pandas as pd
 
-default_columns = ['group','message_id','sender_id','sender_name','message','message_date','message_media']
+default_columns = ['group','message_id','sender_id','sender_name','message','message_date','message_media', 'fwd_source_id', 'fwd_source_name']
 
 def load_range_params(params):
     date_range = {}

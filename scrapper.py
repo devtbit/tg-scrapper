@@ -127,6 +127,18 @@ class Scrapper:
         
         media = await self.handle_media(message)
         data[-1] = media
+
+        if message.forward is not None and \
+            message.forward.original_fwd.from_id is not None:
+            source = await self.telegram.client.get_entity(
+                message.forward.original_fwd.from_id,
+            )
+            data.append(source.id)
+            data.append(source.title)
+        else:
+            data.append(None)
+            data.append(None)
+
         if verbose: print(data)
         return True, data
 
