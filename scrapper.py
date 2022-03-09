@@ -6,7 +6,7 @@ import shutil
 
 from telegram import Telegram
 from s3 import S3
-from utils import clean_prefix, create_dirs, is_in_range, load_range_params, update_csv
+from utils import create_dirs, is_in_range, load_range_params, update_csv
 
 class Scrapper:
 
@@ -41,7 +41,46 @@ class Scrapper:
         self.date_range = load_range_params(params)
 
     def set_target(self, group):
+        group_entity = self.telegram.get_group_entity(group)
+        if group_entity is None:
+            raise Exception('group not found in the groups you are part of')
         self.group = group
+        self.group_entity = group_entity
+
+    def get_groups(self, megagroup=False):
+        return self.telegram.get_groups(megagroup=megagroup)
+    
+    def list_groups(self, megagroup):
+        groups = self.get_groups(megagroup=megagroup)
+        for group in groups:
+            if type(group).__name__ == "ChatForbidden":
+                print(f"({group.id}) {group.title}")
+            elif group.username is not None:
+                print(group.username)
+            else:
+                print(f"({group.id}) {group.title}")
+
+    async def get_group_members(self, limit=None):
+        if not self.group_entity: raise Exception('set target first')
+        members = await self.telegram.get_members(self.group_entity, limit=limit)
+        if members is not None and len(members) > 0:
+            return [[
+                u.username,
+                u.id,
+                f"{u.first_name} {u.last_name}".strip(),
+                self.group,
+            ] for u in members]
+        return []
+
+    async def dump_members(self, limit=None):
+        if not self.group: raise Exception('set target first')
+        directory, fileprefix, prefix = self.create_group_workspace(self.group)
+        csv_archive = f"{fileprefix}_members_archive.csv"
+        members = await self.get_group_members(limit=limit)
+        if len(members) > 0:
+            update_csv(members, csv_archive, columns=['username','id','name','group'])
+        else:
+            print("Nothing to dump")
 
     def get_workspace(self, data_dir="./data"):
         if not self.group: raise Exception('set target first')
@@ -69,7 +108,6 @@ class Scrapper:
             directory, _, _ = self.get_workspace()
             shutil.rmtree(directory)
 
-
     async def handle_media(self, message):
         filename = None
         if message.media:
@@ -95,6 +133,7 @@ class Scrapper:
         if verbose: print(f"processing {group}")
         directory, fileprefix, prefix = self.create_group_workspace(group)
         csv_archive = f"{fileprefix}_archive.csv"
+        self.dump_members()
         rows = []
         try:
             async for message in self.iter_group():
@@ -109,8 +148,7 @@ class Scrapper:
             
         if self.bucket:
             self.bucket.upload(f"{group}/{prefix}_archive.csv", csv_archive)
-
-            
+ 
         if verbose: print(f"completed {group}")
 
     async def scrape_groups(self, verbose=False):

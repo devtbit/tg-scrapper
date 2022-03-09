@@ -31,8 +31,9 @@ class Telegram:
             else:
                 raise Exception('session is not authorized')
         self.client = client
+        self.groups = self.fetch_chat_groups()
 
-    def get_chat_groups(self, offset_date=None, offset_id=0, limit=200):
+    def fetch_chat_groups(self, offset_date=None, offset_id=0, limit=200, megagroup=False):
         result = self.client(GetDialogsRequest(
             offset_date=offset_date,
             offset_id=offset_id,
@@ -40,7 +41,36 @@ class Telegram:
             limit=limit,
             hash=0,
         ))
+        if megagroup:
+            chats = []
+            for c in result.chats:
+                print(c)
+                if type(c).__name__ != "ChatForbidden" and c.megagroup == True:
+                    chats.append(c)
+            return chats
         return result.chats
+
+    def get_groups(self, megagroup=False):
+        if megagroup:
+            return [g for g in self.groups if (
+                type(g).__name__ != "ChatForbidden" and
+                g.megagroup == True
+            )]
+        return self.groups
+
+    def get_group_entity(self, group):
+        for g in self.groups:
+            if group == str(g.id) or group == g.title or (
+                type(g).__name__ != "ChatForbidden" and
+                (
+                    group == g.username # or
+                )
+            ):
+                return g
+        return None
+
+    async def get_members(self, group, limit=None):
+        return await self.client.get_participants(group, limit=limit)
 
     def process_message(self, message, as_dict=False):
         timestamp, date = process_date(

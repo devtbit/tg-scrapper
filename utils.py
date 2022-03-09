@@ -26,14 +26,6 @@ def load_range_params(params):
 
     return date_range
 
-def clean_prefix(string):
-    chars = ""
-    for char in string:
-        if char.isalnum():
-            chars += char
-
-    return chars
-
 def create_dirs(dirs):
     for d in dirs:
         try:

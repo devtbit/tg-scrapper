@@ -6,7 +6,9 @@ from invoke import task
 from scrapper import Scrapper
 from telegram import Telegram
 
-@task
+@task(help={
+    'phone_number': "The phone number to identify",
+})
 def identify(c,
     phone_number,
 ):
@@ -17,6 +19,31 @@ def identify(c,
     with scrapper.telegram.client:
         scrapper.telegram.client.loop.run_until_complete(
             scrapper.identify(phone_number, verbose=True)
+        )
+
+@task(help={
+    'megagroup': "Only display mega-groups",
+})
+def list_groups(c, megagroup=False):
+    """
+    Lists the groups the current user is a member of.
+    """
+    scrapper = Scrapper()
+    scrapper.list_groups(megagroup=megagroup)
+
+@task(help={
+    'group': "Group to dump the member list from",
+    'limit': "Limit the number of members to be dumped (default all)",
+})
+def dump_member_list(c, group, limit=0):
+    """
+    Dumps the list of members of a group.
+    """
+    scrapper = Scrapper()
+    scrapper.create_group_workspace(group)
+    with scrapper.telegram.client:
+        scrapper.telegram.client.loop.run_until_complete(
+            scrapper.dump_members(limit=limit if limit > 0 else None)
         )
 
 @task(help={
@@ -40,7 +67,7 @@ def scrape_groups(c,
     """
     Scrapes all the messages of a list of Telegram groups between the
     given date range. Groups must be either public or with access given to the
-    current user.
+    current user. If member list is available it will also be fetched.
     """
     groups = [g for g in targets.split(',')]
     scrapper = Scrapper(
