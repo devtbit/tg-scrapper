@@ -72,7 +72,9 @@ class Telegram:
         return None
 
     async def get_members(self, group, limit=None):
-        return await self.client.get_participants(group, limit=limit)
+        if group.participants_count is not None and group.participants_count > 0 and group.megagroup:
+            return await self.client.get_participants(group, limit=limit)
+        return []
 
     def process_message(self, message, as_dict=False):
         timestamp, date = process_date(
