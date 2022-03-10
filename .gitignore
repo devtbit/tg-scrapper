@@ -1,7 +1,7 @@
 *.session
 *.session-journal
 data/
-.env
+.env*
 .venv
 __pycache__
 *.swp
