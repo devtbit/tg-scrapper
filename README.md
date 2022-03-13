@@ -45,14 +45,14 @@ Build the image:
 docker build -f Dockerfile -t tg-scrapper:latest .
 ```
 
-Create a shortcut/alias:
+Create a shortcut/alias (AWS variables only needed to upload to S3):
 ```
-alias tg-scrapper="docker run -e "AWS_REGION=us-east-1" -e "AWS_ACCESS_KEY_ID=XXXXXXXXX" -e "AWS_SECRET_ACCESS_KEY=XXXXXXXXX" -e "API_PHONE_NUMBER=+1XXXXXXXX" -e "API_ID=XXXXXXXXXX" -e "API_HASH=XXXXXXXXXXXXX" -v $PWD/data:/tg/data --rm -it --name tg-scrapper tg-scrapper:latest"
+alias tg="docker run -e "AWS_REGION=us-east-1" -e "AWS_ACCESS_KEY_ID=XXXXXXXXX" -e "AWS_SECRET_ACCESS_KEY=XXXXXXXXX" -e "API_PHONE_NUMBER=+1XXXXXXXX" -e "API_ID=XXXXXXXXXX" -e "API_HASH=XXXXXXXXXXXXX" -v $PWD/data:/tg/data --rm -it --name tg-scrapper tg-scrapper:latest"
 ```
 
 Run it:
 ```
-tg-scrapper scrape-groups --targets=MySecretGroup -f 2022-02-28 -t 2022-03-01 -v
+tg scrape-groups --targets=MySecretGroup -f 2022-02-28 -t 2022-03-01 -v
 ```
 
 ## AWS ECS (Docker compose)
@@ -73,6 +73,17 @@ TO_DATE=XXXXXXXXXX
 S3_BUCKET=XXXXXXXXX
 IMAGE=myuser/tg-scrapper:latest
 IMAGE_REPO_SM=arn:aws:secretsmanager:XXXXXXXXXXXXX
+```
+
+Build your image:
+```
+docker build -f Dockerfile -t myuser/tg-scrapper:latest .
+```
+NOTE: if you are building from an ARM device pass ```--platform linux/amd64``` to avoid issues.
+
+Push your image to your repository:
+```
+docker image push myuser/tg-scrapper:latest
 ```
 
 Then create your ECS cluster with the following command:
