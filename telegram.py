@@ -98,12 +98,14 @@ class Telegram:
                 date,
                 None], timestamp
 
-    def iter_chat(self, group):
+    def iter_chat(self, group, offset_date=None):
         self.current_group = group
-        return self.client.iter_messages(group)
+        return self.client.iter_messages(group, offset_date=offset_date)
 
     async def download_message_media(self, message, location):
         media_path = await message.download_media(file=location)
+        if media_path is None:
+            return None, None
         base_name = os.path.basename(media_path)
         return media_path, base_name
 

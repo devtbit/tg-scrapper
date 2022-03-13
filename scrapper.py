@@ -99,10 +99,11 @@ class Scrapper:
 
     def iter_group(self):
         if not self.group_entity: raise Exception('set target first')
-        return self.telegram.iter_chat(self.group_entity)
+        return self.telegram.iter_chat(self.group_entity, offset_date=self.date_range["to"]["timestamp"])
 
     def is_in_scope(self, timestamp):
-        return is_in_range(self.date_range, timestamp)
+        in_range = is_in_range(self.date_range, timestamp)
+        return in_range
 
     def teardown_workspace(self):
         if self.post_cleanup:
@@ -114,9 +115,13 @@ class Scrapper:
         if message.media:
             _, fileprefix, prefix = self.get_workspace()
             media, filename = await self.telegram.download_message_media(message, f"{fileprefix}_media")
+            if media is None:
+                return None
             object_name = f"{self.group}/{prefix}_media/{filename}"
             if self.bucket:
                 self.bucket.upload(object_name, media)
+                if self.post_cleanup:
+                    os.remove(media)
         return filename
 
     async def process_message(self, message, verbose=False):

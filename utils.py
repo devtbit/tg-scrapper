@@ -46,7 +46,7 @@ def process_date(year, month, day, hour, minute):
     )
 
 def is_in_range(date_range, timestamp):
-    return date_range['from']['timestamp'] <= timestamp and date_range['to']['timestamp']
+    return date_range['from']['timestamp'] <= timestamp and date_range['to']['timestamp'] >= timestamp
 
 def update_csv(rows, archive, sep=';', columns=default_columns):
     df = pd.DataFrame(rows, columns=columns)

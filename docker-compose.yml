@@ -1,10 +1,10 @@
 version: "3.9"
 services:
-  tg-scrapper:
+  core:
     image: "${IMAGE}"
     x-aws-pull_credentials: "${IMAGE_REPO_SM}"
     volumes:
-      - tg-scrapper-data:/tg/data
+      - core-data:/tg/data
     environment:
       - AWS_REGION
       - AWS_ACCESS_KEY_ID
@@ -14,4 +14,4 @@ services:
       - API_HASH
     command: "scrape-groups --targets=\"${TG_GROUPS}\" -f ${FROM_DATE} -t ${TO_DATE} -v -u -b ${S3_BUCKET}"
 volumes:
-  tg-scrapper-data:
+  core-data:
