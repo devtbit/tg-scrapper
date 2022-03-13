@@ -12,6 +12,6 @@ services:
       - API_PHONE_NUMBER
       - API_ID
       - API_HASH
-    command: "scrape-groups --targets=\"${TG_GROUPS}\" -f ${FROM_DATE} -t ${TO_DATE} -v -u -b ${S3_BUCKET}"
+    command: "scrape-groups --targets=\"${TG_GROUPS}\" -f ${FROM_DATE} -t ${TO_DATE} -v -u -b ${S3_BUCKET} -c"
 volumes:
   core-data:
