@@ -134,11 +134,17 @@ class Scrapper:
 
         if message.forward is not None and \
             message.forward.original_fwd.from_id is not None:
-            source = await self.telegram.client.get_entity(
-                message.forward.original_fwd.from_id,
-            )
-            data.append(source.id)
-            data.append(source.title)
+            try:
+                source = await self.telegram.client.get_entity(
+                    message.forward.original_fwd.from_id,
+                )
+                data.append(source.id)
+                data.append(source.title)
+            except Exception as e:
+                fwd_id = message.forward.original_fwd.from_id
+                if verbose: print(f"WARN: forward is private or cannot be accessed ({fwd_id})")
+                data.append(fwd_id)
+                data.append(None)
         else:
             data.append(None)
             data.append(None)
