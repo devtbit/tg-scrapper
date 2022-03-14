@@ -6,39 +6,56 @@ This tool was created with a focus on automation and containerization. The idea 
 
 ### Requirements
 
-This tool requires to be registered in Telegram API. API ID and API Hash are required for this to work. These values are provided through environment variables:
+This tool depends on Telethon and is required to be registered in Telegram API. Credentials are provided through environment variables:
 
 * API_PHONE_NUMBER
 * API_ID
 * API_HASH
 
-### Install
+To upload data to S3 Bucket then AWS CLI is required to be installed and configured.
 
 ```
 pip install -r requirements.txt
 ```
 
-### Examples
+### Usage
 
-Display the list of groups current user is member of:
+Tool uses invoke to run tasks:
 ```
-inv list-groups
+$> inv --list
+
+Available tasks:
+
+  dump-member-list   Dumps the list of members of a group.
+  identify           Identifies a phone number against a Telegram user.
+  list-groups        Lists the groups the current user is a member of.
+  scrape-groups      Scrapes all the messages of a list of Telegram groups between the given date range.
+  verify-session     Verifies the session with a code sent through Telegram.
 ```
 
-Scrape two groups from 2022-01-01 to 2022-03-01 and print every message:
+#### Examples
+
+Validate your session before running any other command (if you haven't):
+```
+inv verify-session
+```
+Telethon will generate session files that can be reused.
+
+Scrape two groups from 2022-01-01 to 2022-03-01 and display every message:
 ```
 inv scrape-groups --targets=MySecretGroup,MyOtherSecretGroup -f 2022-01-01 -t 2022-03-01 -v
 ```
+This command will fetch all memebers of the groups (if possible) and all messages and store them in 2 CSV files. It will also downlad all media files from messages. CSV files and media folders will be prefixed by a timestamp for unique identification across runs.
 
 The next command requires AWS CLI with credentials configured (note that account only requires PutObject permissions to the bucket).
-Scrape one group from 2022-02-28 to 2022-03-01 and upload everything to a S3 Bucket named MY_BUCKET (NOTE: -c will delete every file downloaded locally):
+Scrape one group from 2022-02-28 to 2022-03-01 and upload everything to a S3 Bucket named MY_BUCKET (NOTE: -c will delete every file downloaded/generated locally):
 ```
 inv scrape-groups --targets=MySecretGroup -f 2022-02-28 -t 2022-03-01 -v -u -b MY_BUCKET -c
 ```
 
 ## Docker
 
-The tool can also be dockerized:
+The tool can also be dockerized. It is recommended to generate the Telethon (Telegram) session before building the Docker image for portability (as long as you consider this Docker image private at all times). The session file can also be passed in the ```docker run``` command through a Volume. The following instructions assume the former.
 
 Build the image:
 ```

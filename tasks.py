@@ -65,9 +65,9 @@ def scrape_groups(c,
         verbose=False,
 ):
     """
-    Scrapes all the messages of a list of Telegram groups between the
-    given date range. Groups must be either public or with access given to the
-    current user. If member list is available it will also be dumped.
+    Scrapes all the messages of a list of Telegram groups between the given date range.
+    Groups must be either public or with access given to the current user.
+    If member list is available it will also be dumped.
     """
     if verbose: print(f"Scrapping from {from_date} to {to_date}")
     groups = [g for g in targets.split(',')]
