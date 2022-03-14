@@ -12,7 +12,9 @@ This tool depends on Telethon and is required to be registered in Telegram API. 
 * API_ID
 * API_HASH
 
-To upload data to S3 Bucket then AWS CLI is required to be installed and configured.
+AWS CLI can optionally be installed in order to upload data to a S3 Bucket.
+
+#### Install dependencies 
 
 ```
 pip install -r requirements.txt
