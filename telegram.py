@@ -4,7 +4,8 @@ import os
 
 from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
-from telethon.tl.types import InputPeerEmpty
+from telethon.tl.functions.channels import GetParticipantsRequest
+from telethon.tl.types import InputPeerEmpty, ChannelParticipantsRecent
 from telethon.utils import get_display_name
 
 from utils import process_date
@@ -64,9 +65,27 @@ class Telegram:
                 return g
         return None
 
-    async def get_members(self, group, limit=None):
+    async def get_members(self, group, default_size=200):
         if group.participants_count is not None and group.participants_count > 0 and group.megagroup:
-            return await self.client.get_participants(group, limit=limit)
+            if group.participants_count < default_size:
+                result = await self.client.get_participants(group)
+                return result
+            else:
+                participants = []
+                fetched = 0
+                while fetched < group.participants_count:
+                    result = await self.client(GetParticipantsRequest(
+                        channel=group,
+                        filter=ChannelParticipantsRecent(),
+                        offset=fetched,
+                        limit=default_size,
+                        hash=0
+                    ))
+                    if len(result.users) == 0:
+                        break
+                    fetched += len(result.users)
+                    participants.extend(result.users)
+                return participants
         return []
 
     def process_message(self, message, as_dict=False):

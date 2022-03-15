@@ -58,9 +58,9 @@ class Scrapper:
             else:
                 print(group.username)
 
-    async def get_group_members(self, limit=None):
+    async def get_group_members(self):
         if not self.group_entity: raise Exception('set target first')
-        members = await self.telegram.get_members(self.group_entity, limit=limit)
+        members = await self.telegram.get_members(self.group_entity)
         if members is not None and len(members) > 0:
             return [[
                 u.username,
@@ -70,11 +70,11 @@ class Scrapper:
             ] for u in members]
         return []
 
-    async def dump_members(self, limit=None):
+    async def dump_members(self):
         if not self.group: raise Exception('set target first')
         directory, fileprefix, prefix = self.create_group_workspace(self.group)
         csv_archive = f"{fileprefix}_members_archive.csv"
-        members = await self.get_group_members(limit=limit)
+        members = await self.get_group_members()
         if len(members) > 0:
             update_csv(members, csv_archive, columns=['username','id','name','group'])
             if self.bucket:
@@ -134,15 +134,21 @@ class Scrapper:
 
         if message.forward is not None and \
             message.forward.original_fwd.from_id is not None:
+            source = None
             try:
                 source = await self.telegram.client.get_entity(
                     message.forward.original_fwd.from_id,
                 )
                 data.append(source.id)
-                data.append(source.title)
+                if type(source).__name__ == "User":
+                    data.append(source.username)
+                else:
+                    data.append(source.title)
             except Exception as e:
                 fwd_id = message.forward.original_fwd.from_id
-                if verbose: print(f"WARN: forward is private or cannot be accessed ({fwd_id})")
+                if verbose:
+                    print(str(e))
+                    print(f"WARN: forward is private or cannot be accessed ({fwd_id})")
                 data.append(fwd_id)
                 data.append(None)
         else:
@@ -177,7 +183,16 @@ class Scrapper:
 
     async def scrape_groups(self, verbose=False):
         for group in self.target_groups:
-            await self.scrape_group(group, verbose=verbose)
+            try:
+                await self.scrape_group(group, verbose=verbose)
+            except Exception as e:
+                if "ChatForbidden" in str(e):
+                    if verbose:
+                        print(str(e))
+                        print(f"skipping {group}")
+                    continue
+                else:
+                    raise e
 
     async def identify(self, phone_number, verbose=False):
         try:

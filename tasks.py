@@ -33,7 +33,6 @@ def list_groups(c, megagroup=False):
 
 @task(help={
     'group': "Group to dump the member list from",
-    'limit': "Limit the number of members to be dumped (default all)",
 })
 def dump_member_list(c, group, limit=0):
     """
@@ -43,7 +42,7 @@ def dump_member_list(c, group, limit=0):
     scrapper.create_group_workspace(group)
     with scrapper.telegram.client:
         scrapper.telegram.client.loop.run_until_complete(
-            scrapper.dump_members(limit=limit if limit > 0 else None)
+            scrapper.dump_members()
         )
 
 @task(help={
