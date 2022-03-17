@@ -2,7 +2,6 @@
 
 import datetime
 import os
-import shutil
 
 from telegram import Telegram
 from s3 import S3
@@ -106,10 +105,6 @@ class Scrapper:
         in_range = is_in_range(self.date_range, timestamp)
         return in_range
 
-    def teardown_workspace(self):
-        directory, _, _ = self.get_workspace()
-        shutil.rmtree(directory)
-
     async def handle_media(self, message):
         filename = None
         if message.media:
@@ -117,7 +112,8 @@ class Scrapper:
             media, filename = await self.telegram.download_message_media(message, f"{fileprefix}_media")
             if media is None:
                 return None
-            object_name = f"{self.group}/{prefix}_media/{message.id}_{filename}"
+            filename = f"{message.id}_{filename}"
+            object_name = f"{self.group}/{prefix}_media/{filename}"
             if self.bucket:
                 self.bucket.upload(object_name, media)
                 if self.post_cleanup:
@@ -178,8 +174,6 @@ class Scrapper:
             
         if self.bucket:
             self.bucket.upload(f"{group}/{prefix}_archive.csv", csv_archive)
-            if self.post_cleanup:
-                self.teardown_workspace()
         if verbose: print(f"completed {group}")
 
     async def scrape_groups(self, verbose=False):
