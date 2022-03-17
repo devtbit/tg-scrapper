@@ -6,11 +6,15 @@ This tool was created with a focus on automation and containerization. The idea 
 
 ### Requirements
 
-This tool depends on Telethon and is required to be registered in Telegram API. Credentials are provided through environment variables:
+This tool depends on Telethon and is required to be registered in Telegram API. Credentials are provided through environment variables. To set the variables:
 
-* API_PHONE_NUMBER
-* API_ID
-* API_HASH
+```
+export API_PHONE_NUMBER=XXXXXXXXXX
+export API_ID=XXXXXXXXXX
+export API_HASH=XXXXXXXXXX
+```
+
+To obtain API credentials go to: my.telegram.org
 
 AWS CLI can optionally be installed in order to upload data to a S3 Bucket.
 
