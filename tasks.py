@@ -34,15 +34,14 @@ def list_groups(c, megagroup=False):
 @task(help={
     'group': "Group to dump the member list from",
 })
-def dump_member_list(c, group, limit=0):
+def dump_member_list(c, group):
     """
     Dumps the list of members of a group.
     """
     scrapper = Scrapper()
-    scrapper.create_group_workspace(group)
     with scrapper.telegram.client:
         scrapper.telegram.client.loop.run_until_complete(
-            scrapper.dump_members()
+            scrapper.dump_members(group)
         )
 
 @task(help={
@@ -69,7 +68,7 @@ def scrape_groups(c,
     If member list is available it will also be dumped.
     """
     if verbose: print(f"Scrapping from {from_date} to {to_date}")
-    groups = [g for g in targets.split(',')]
+    groups = targets.split(',')
     scrapper = Scrapper(
         groups,
         s3_upload=upload,

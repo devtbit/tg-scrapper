@@ -4,7 +4,7 @@ import os
 
 from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
-from telethon.tl.functions.channels import GetParticipantsRequest
+from telethon.tl.functions.channels import GetParticipantsRequest, GetChannelsRequest
 from telethon.tl.types import InputPeerEmpty, ChannelParticipantsRecent
 from telethon.utils import get_display_name
 
@@ -44,6 +44,14 @@ class Telegram:
         ))
         return result.chats
 
+    async def fetch_group(self, group):
+        result = await self.client(GetChannelsRequest(
+            id=[group]
+        ))
+        if len(result.chats) > 0:
+            return result.chats[0]
+        return None
+
     def get_groups(self, megagroup=False):
         if megagroup:
             return [g for g in self.groups if (
@@ -52,7 +60,7 @@ class Telegram:
             )]
         return self.groups
 
-    def get_group_entity(self, group):
+    async def get_group_entity(self, group):
         for g in self.groups:
             if group == str(g.id) or group == g.title or (
                 type(g).__name__ != "ChatForbidden" and
@@ -63,11 +71,11 @@ class Telegram:
                 if type(g).__name__ == "ChatForbidden":
                     raise Exception('ChatForbidden is not supported for scrapping')
                 return g
-        return None
+        return await self.fetch_group(group)
 
     async def get_members(self, group, default_size=200):
-        if group.participants_count is not None and group.participants_count > 0 and group.megagroup:
-            if group.participants_count < default_size:
+        if group.megagroup:
+            if group.participants_count is None or group.participants_count < default_size:
                 result = await self.client.get_participants(group)
                 return result
             else:

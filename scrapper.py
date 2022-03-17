@@ -40,10 +40,10 @@ class Scrapper:
         }
         self.date_range = load_range_params(params)
 
-    def set_target(self, group):
-        group_entity = self.telegram.get_group_entity(group)
+    async def set_target(self, group):
+        group_entity = await self.telegram.get_group_entity(group)
         if group_entity is None:
-            raise Exception('group not found in the groups you are part of')
+            raise Exception('group not found or no access to it') 
         self.group = group
         self.group_entity = group_entity
 
@@ -70,15 +70,16 @@ class Scrapper:
             ] for u in members]
         return []
 
-    async def dump_members(self):
-        if not self.group: raise Exception('set target first')
-        directory, fileprefix, prefix = self.create_group_workspace(self.group)
+    async def dump_members(self, group):
+        directory, fileprefix, prefix = await self.create_group_workspace(group)
         csv_archive = f"{fileprefix}_members_archive.csv"
         members = await self.get_group_members()
         if len(members) > 0:
             update_csv(members, csv_archive, columns=['username','id','name','group'])
             if self.bucket:
                 self.bucket.upload(f"{self.group}/{prefix}_members_archive.csv", csv_archive)
+                if self.post_cleanup:
+                    os.remove(csv_archive)
         else:
             print("memberlist not available")
 
@@ -88,10 +89,10 @@ class Scrapper:
         prefix = f"{self.group}_{str(self.timestamp)}"
         return directory, f"{directory}/{prefix}", prefix
 
-    def create_group_workspace(self,
+    async def create_group_workspace(self,
         group,
     ):
-        self.set_target(group)
+        await self.set_target(group)
         directory, fileprefix, prefix = self.get_workspace()
         media = f"{fileprefix}_media"
         create_dirs([media])
@@ -106,9 +107,8 @@ class Scrapper:
         return in_range
 
     def teardown_workspace(self):
-        if self.post_cleanup:
-            directory, _, _ = self.get_workspace()
-            shutil.rmtree(directory)
+        directory, _, _ = self.get_workspace()
+        shutil.rmtree(directory)
 
     async def handle_media(self, message):
         filename = None
@@ -117,7 +117,7 @@ class Scrapper:
             media, filename = await self.telegram.download_message_media(message, f"{fileprefix}_media")
             if media is None:
                 return None
-            object_name = f"{self.group}/{prefix}_media/{filename}"
+            object_name = f"{self.group}/{prefix}_media/{message.id}_{filename}"
             if self.bucket:
                 self.bucket.upload(object_name, media)
                 if self.post_cleanup:
@@ -161,9 +161,9 @@ class Scrapper:
     async def scrape_group(self, group, verbose=False):
         if group not in self.target_groups: raise Exception('group not in targets')
         if verbose: print(f"processing {group}")
-        directory, fileprefix, prefix = self.create_group_workspace(group)
+        directory, fileprefix, prefix = await self.create_group_workspace(group)
         csv_archive = f"{fileprefix}_archive.csv"
-        await self.dump_members()
+        await self.dump_members(group)
         rows = []
         try:
             async for message in self.iter_group():
@@ -178,7 +178,8 @@ class Scrapper:
             
         if self.bucket:
             self.bucket.upload(f"{group}/{prefix}_archive.csv", csv_archive)
- 
+            if self.post_cleanup:
+                self.teardown_workspace()
         if verbose: print(f"completed {group}")
 
     async def scrape_groups(self, verbose=False):
@@ -186,7 +187,7 @@ class Scrapper:
             try:
                 await self.scrape_group(group, verbose=verbose)
             except Exception as e:
-                if "ChatForbidden" in str(e):
+                if "ChatForbidden" in str(e) or "Could not find" in str(e) or "not found" in str(e):
                     if verbose:
                         print(str(e))
                         print(f"skipping {group}")
