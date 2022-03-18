@@ -27,8 +27,8 @@ class Telegram:
 
         if not client.is_user_authorized():
             if verify:
-                client.send_code_request(phone_number)
-                client.sign_in(phone_number, input('code: '))
+                client.send_code_request(credentials['api_phone_number'])
+                client.sign_in(credentials['api_phone_number'], input('code: '))
             else:
                 raise Exception('session is not authorized')
         self.client = client
