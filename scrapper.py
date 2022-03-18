@@ -2,6 +2,7 @@
 
 import datetime
 import os
+import shutil
 
 from telegram import Telegram
 from s3 import S3
@@ -173,7 +174,12 @@ class Scrapper:
             raise Exception('failed to scrape groups')
             
         if self.bucket:
-            self.bucket.upload(f"{group}/{prefix}_archive.csv", csv_archive)
+            if len(rows) > 0:
+                self.bucket.upload(f"{group}/{prefix}_archive.csv", csv_archive)
+                if self.post_cleanup:
+                    shutil.rmtree(directory)
+            else:
+                if verbose: print("nothing to upload")
         if verbose: print(f"completed {group}")
 
     async def scrape_groups(self, verbose=False):
