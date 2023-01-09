@@ -1,20 +1,18 @@
 #!/usr/bin/env python
-
 import os
 
 from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
-from telethon.tl.functions.channels import GetParticipantsRequest, GetChannelsRequest
+from telethon.tl.functions.channels import (
+        GetParticipantsRequest, GetChannelsRequest)
 from telethon.tl.types import InputPeerEmpty, ChannelParticipantsRecent
 from telethon.utils import get_display_name
 
 from utils import process_date
 
+
 class Telegram:
-    def __init__(self,
-            credentials=None,
-            verify=False
-        ):
+    def __init__(self, credentials=None, verify=False):
         if credentials is None:
             credentials = Telegram.get_credentials()
 
@@ -28,7 +26,8 @@ class Telegram:
         if not client.is_user_authorized():
             if verify:
                 client.send_code_request(credentials['api_phone_number'])
-                client.sign_in(credentials['api_phone_number'], input('code: '))
+                client.sign_in(credentials['api_phone_number'],
+                               input('code: '))
             else:
                 raise Exception('session is not authorized')
         self.client = client
@@ -56,7 +55,7 @@ class Telegram:
         if megagroup:
             return [g for g in self.groups if (
                 type(g).__name__ != "ChatForbidden" and
-                g.megagroup == True
+                g.megagroup
             )]
         return self.groups
 
@@ -65,17 +64,19 @@ class Telegram:
             if group == str(g.id) or group == g.title or (
                 type(g).__name__ != "ChatForbidden" and
                 (
-                    group == g.username # or
+                    group == g.username  # or
                 )
             ):
                 if type(g).__name__ == "ChatForbidden":
-                    raise Exception('ChatForbidden is not supported for scrapping')
+                    raise Exception('ChatForbidden is not supported \
+                            for scrapping')
                 return g
         return await self.fetch_group(group)
 
     async def get_members(self, group, default_size=200):
         if group.megagroup:
-            if group.participants_count is None or group.participants_count < default_size:
+            if (group.participants_count is None
+                    or group.participants_count < default_size):
                 result = await self.client.get_participants(group)
                 return result
             else:
@@ -117,9 +118,9 @@ class Telegram:
 
         return [self.current_group.id,
                 message.id,
-                message.from_id.user_id 
-                    if type(message.from_id).__name__ == "PeerUser" 
-                    else message.from_id,
+                (message.from_id.user_id
+                    if type(message.from_id).__name__ == "PeerUser"
+                    else message.from_id),
                 sender_name,
                 f"\"{message.text}\"",
                 date,

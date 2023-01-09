@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-
 import os
 import datetime
 import pandas as pd
 
-default_columns = ['group','message_id','sender_id','sender_name','message','message_date','message_media', 'fwd_source_id', 'fwd_source_name']
+default_columns = ['group', 'message_id', 'sender_id', 'sender_name',
+                   'message', 'message_date', 'message_media', 'fwd_source_id',
+                   'fwd_source_name']
+
 
 def load_range_params(params):
     date_range = {}
@@ -26,12 +28,14 @@ def load_range_params(params):
 
     return date_range
 
+
 def create_dirs(dirs):
     for d in dirs:
         try:
             os.makedirs(d)
         except FileExistsError:
             pass
+
 
 def process_date(year, month, day, hour, minute):
     year = str(format(year, '02d'))
@@ -45,8 +49,11 @@ def process_date(year, month, day, hour, minute):
         f"{year}-{month}-{day}, {hour}:{minute}",
     )
 
+
 def is_in_range(date_range, timestamp):
-    return date_range['from']['timestamp'] <= timestamp and date_range['to']['timestamp'] >= timestamp
+    return (date_range['from']['timestamp'] <= timestamp
+            and date_range['to']['timestamp'] >= timestamp)
+
 
 def update_csv(rows, archive, sep=';', columns=default_columns):
     df = pd.DataFrame(rows, columns=columns)
