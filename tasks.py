@@ -53,6 +53,7 @@ def dump_member_list(c, group):
     'upload': "Flag to indicate that outputs need to be uploaded \
             (requires bucket)",
     'cleanup': "Delete all files when done",
+    'skip_media': "Skip downloading media",
     'verbose': "Output additional info",
 })
 def scrape_groups(c,
@@ -62,6 +63,7 @@ def scrape_groups(c,
                   bucket=None,
                   upload=False,
                   cleanup=False,
+                  skip_media=False,
                   verbose=False):
     """
     Scrapes all the messages of a list of Telegram groups between
@@ -77,6 +79,7 @@ def scrape_groups(c,
         s3_upload=upload,
         bucket_name=bucket,
         post_cleanup=cleanup,
+        skip_media=skip_media,
     )
     scrapper.set_date_range(from_date, to_date)
 

@@ -15,6 +15,7 @@ class Scrapper:
                  s3_upload=False,
                  bucket_name=None,
                  post_cleanup=False,
+                 skip_media=False,
                  date_range=None):
         self.telegram = Telegram()
         self.target_groups = target_groups
@@ -25,6 +26,7 @@ class Scrapper:
         self.date_range = date_range
         self.timestamp = datetime.datetime.now().strftime("%Y_%m_%d-%H_%M")
         self.group = None
+        self.skip_media = skip_media
 
     def set_date_range(self, from_date, to_date):
         fd = from_date.split('-')
@@ -136,8 +138,9 @@ class Scrapper:
         if not self.is_in_scope(timestamp):
             return False, None
 
-        media = await self.handle_media(message)
-        data[-1] = media
+        if not self.skip_media:
+            media = await self.handle_media(message)
+            data[-1] = media
 
         if message.forward is not None and \
            message.forward.original_fwd.from_id is not None:
