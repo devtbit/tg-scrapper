@@ -64,6 +64,7 @@ def scrape_groups(c,
                   upload=False,
                   cleanup=False,
                   skip_media=False,
+                  use_db=False,
                   verbose=False):
     """
     Scrapes all the messages of a list of Telegram groups between
@@ -80,6 +81,7 @@ def scrape_groups(c,
         bucket_name=bucket,
         post_cleanup=cleanup,
         skip_media=skip_media,
+        use_db=use_db,
     )
     scrapper.set_date_range(from_date, to_date)
 

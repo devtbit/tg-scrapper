@@ -2,6 +2,7 @@
 import os
 import datetime
 import pandas as pd
+from models import Message
 
 default_columns = ['group', 'message_id', 'sender_id', 'sender_name',
                    'message', 'message_date', 'message_media', 'fwd_source_id',
@@ -57,6 +58,28 @@ def is_in_range(date_range, timestamp):
 
 def update_csv(rows, archive, sep=';', columns=default_columns):
     df = pd.DataFrame(rows, columns=columns)
+    df.loc[:, "message"] = df["message"].apply(
+            lambda x: x.replace('\n', '\\n'))
     with open(archive, 'w+') as f:
         df.to_csv(f, sep=sep)
     return True
+
+
+def store_data(db, rows, prefix):
+    for row in rows:
+        date = datetime.datetime.strptime(
+                row[5],
+                '%Y-%m-%d, %H:%M',
+        )
+        message = Message.create(
+                group=row[0],
+                message_id=row[1],
+                sender_id=row[2],
+                sender_name=row[3],
+                message=row[4],
+                message_date=date,
+                message_media=f"{prefix}_media/{row[6]}",
+                fwd_source_id=row[7],
+                fwd_source_name=row[8],
+        )
+        message.save()

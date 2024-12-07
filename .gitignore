@@ -5,3 +5,5 @@ data/
 .venv
 __pycache__
 *.swp
+*.profile
+*.db

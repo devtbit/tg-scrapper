@@ -5,7 +5,18 @@ import shutil
 
 from telegram import Telegram
 from s3 import S3
-from utils import create_dirs, is_in_range, load_range_params, update_csv
+from utils import (
+    create_dirs,
+    is_in_range,
+    load_range_params,
+    update_csv,
+    store_data,
+)
+from models import (
+    db,
+    Message,
+    Media,
+)
 
 
 class Scrapper:
@@ -16,6 +27,7 @@ class Scrapper:
                  bucket_name=None,
                  post_cleanup=False,
                  skip_media=False,
+                 use_db=False,
                  date_range=None):
         self.telegram = Telegram()
         self.target_groups = target_groups
@@ -27,6 +39,11 @@ class Scrapper:
         self.timestamp = datetime.datetime.now().strftime("%Y_%m_%d-%H_%M")
         self.group = None
         self.skip_media = skip_media
+        self.dbconn = None
+        if use_db:
+            self.dbconn = db
+            self.dbconn.connect()
+            self.dbconn.create_tables([Message, Media])
 
     def set_date_range(self, from_date, to_date):
         fd = from_date.split('-')
@@ -124,7 +141,7 @@ class Scrapper:
                     f"{fileprefix}_media")
             if media is None:
                 return None
-            filename = f"{message.id}_{filename}"
+            # filename = f"{message.id}_{filename}"
             object_name = f"{self.group}/{prefix}_media/{filename}"
             if self.bucket:
                 self.bucket.upload(object_name, media)
@@ -188,7 +205,10 @@ class Scrapper:
                         message, verbose=verbose)
                 if in_scope:
                     rows.append(data)
-                    update_csv(rows, csv_archive)
+                    if self.dbconn is not None:
+                        store_data(self.dbconn, rows, fileprefix)
+                    else:
+                        update_csv(rows, csv_archive)
         except Exception as e:
             print(e)
             raise Exception('failed to scrape groups')
