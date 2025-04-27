@@ -3,7 +3,6 @@ import os
 from peewee import (
     CharField,
     DateField,
-    ForeignKeyField,
     Model,
     SqliteDatabase,
 )
@@ -25,15 +24,6 @@ class Message(Model):
     message_media = CharField(null=True)
     fwd_source_id = CharField(null=True)
     fwd_source_name = CharField(null=True)
-
-    class Meta:
-        database = db
-
-
-class Media(Model):
-    message = ForeignKeyField(Message, backref='media')
-    name = CharField()
-    file_location = CharField()
 
     class Meta:
         database = db

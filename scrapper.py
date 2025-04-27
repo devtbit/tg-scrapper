@@ -15,7 +15,6 @@ from utils import (
 from models import (
     db,
     Message,
-    Media,
 )
 
 
@@ -43,7 +42,7 @@ class Scrapper:
         if use_db:
             self.dbconn = db
             self.dbconn.connect()
-            self.dbconn.create_tables([Message, Media])
+            self.dbconn.create_tables([Message])
 
     def set_date_range(self, from_date, to_date):
         fd = from_date.split('-')
