@@ -204,16 +204,16 @@ class Scrapper:
                 in_scope, data = await self.process_message(
                         message, verbose=verbose)
                 if in_scope:
-                    rows.append(data)
                     if self.dbconn is not None:
-                        store_data(self.dbconn, rows, fileprefix)
+                        store_data(self.dbconn, [data], fileprefix)
                     else:
+                        rows.append(data)
                         update_csv(rows, csv_archive)
         except Exception as e:
             print(e)
             raise Exception('failed to scrape groups')
 
-        if self.bucket:
+        if self.bucket and not self.dbconn:
             if len(rows) > 0:
                 self.bucket.upload(
                         f"{group}/{prefix}_archive.csv", csv_archive)

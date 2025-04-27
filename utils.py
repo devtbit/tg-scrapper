@@ -4,9 +4,18 @@ import datetime
 import pandas as pd
 from models import Message
 
-default_columns = ['group', 'message_id', 'sender_id', 'sender_name',
-                   'message', 'message_date', 'message_media', 'fwd_source_id',
-                   'fwd_source_name']
+default_columns = [
+    'group',
+    'message_id',
+    'grouped_id',
+    'sender_id',
+    'sender_name',
+    'message',
+    'message_date',
+    'message_media',
+    'fwd_source_id',
+    'fwd_source_name',
+]
 
 
 def load_range_params(params):
@@ -68,18 +77,19 @@ def update_csv(rows, archive, sep=';', columns=default_columns):
 def store_data(db, rows, prefix):
     for row in rows:
         date = datetime.datetime.strptime(
-                row[5],
+                row[6],
                 '%Y-%m-%d, %H:%M',
         )
         message = Message.create(
                 group=row[0],
                 message_id=row[1],
-                sender_id=row[2],
-                sender_name=row[3],
-                message=row[4],
+                grouped_id=row[2],
+                sender_id=row[3],
+                sender_name=row[4],
+                message=row[5],
                 message_date=date,
-                message_media=f"{prefix}_media/{row[6]}",
-                fwd_source_id=row[7],
-                fwd_source_name=row[8],
+                message_media=f"{prefix}_media/{row[7]}",
+                fwd_source_id=row[8],
+                fwd_source_name=row[9],
         )
         message.save()

@@ -118,6 +118,7 @@ class Telegram:
 
         return [self.current_group.id,
                 message.id,
+                message.grouped_id,
                 (message.from_id.user_id
                     if type(message.from_id).__name__ == "PeerUser"
                     else message.from_id),
