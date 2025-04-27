@@ -54,6 +54,7 @@ def dump_member_list(c, group):
             (requires bucket)",
     'cleanup': "Delete all files when done",
     'skip_media': "Skip downloading media",
+    'use_db': "Use sqlite database to store messages",
     'verbose': "Output additional info",
 })
 def scrape_groups(c,
