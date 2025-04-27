@@ -209,6 +209,8 @@ class Scrapper:
                     else:
                         rows.append(data)
                         update_csv(rows, csv_archive)
+                else:
+                    break
         except Exception as e:
             print(e)
             raise Exception('failed to scrape groups')
