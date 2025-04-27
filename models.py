@@ -17,6 +17,7 @@ class Message(Model):
     group = CharField(null=True)
     message_id = CharField(null=True)
     grouped_id = CharField(null=True)
+    reply_to_message_id = CharField(null=True)
     sender_id = CharField(null=True)
     sender_name = CharField(null=True)
     message = CharField(null=True)

@@ -106,19 +106,28 @@ class Telegram:
             message.date.minute,
         )
         sender_name = get_display_name(message.sender)
+        reply_to_message_id = None
+
+        if message.reply_to is not None:
+            reply_to_message_id = message.reply_to.reply_to_msg_id
+
         if as_dict:
             return {
+                'group_id': self.current_group.id,
                 'sender_name': sender_name,
                 'sender_id': message.from_id,
                 'message_id': message.id,
                 'message_timestamp': timestamp,
                 'message_date': date,
                 'message': message.text,
+                'grouped_id': message.grouped_id,
+                'reply_to_message_id': reply_to_message_id,
             }
 
         return [self.current_group.id,
                 message.id,
                 message.grouped_id,
+                reply_to_message_id,
                 (message.from_id.user_id
                     if type(message.from_id).__name__ == "PeerUser"
                     else message.from_id),
