@@ -42,19 +42,34 @@ Available tasks:
 #### Examples
 
 Validate your session before running any other command (if you haven't):
+
 ```
 inv verify-session
 ```
 Telethon will generate session files that can be reused.
 
-Scrape two groups from 2022-01-01 to 2022-03-01 and display every message:
+#### Scraping
+
+Scrape two groups from 2022-01-01 to 2022-03-01 and display every message (skipping media download):
+
 ```
-inv scrape-groups --targets=MySecretGroup,MyOtherSecretGroup -f 2022-01-01 -t 2022-03-01 -v
+inv scrape-groups --targets=MySecretGroup,MyOtherSecretGroup -f 2022-01-01 -t 2022-03-01 -v --skip-media
 ```
-This command will fetch all memebers of the groups (if possible) and all messages and store them in 2 CSV files. It will also downlad all media files from messages. CSV files and media folders will be prefixed by a timestamp for unique identification across runs.
+This command will fetch all memebers of the groups (if possible) and all messages and store them in 2 CSV files.
+
+You can also store the messages in a local sqlite database:
+
+```
+inv scrape-groups --targets=MySecretGroup -f 2022-02-28 -t 2022-03-01 -e
+```
+
+You can specify a custom path with the environment variable `TG_DB_NAME`
+
+#### Uploading to S3
 
 The next command requires AWS CLI with credentials configured (note that account only requires PutObject permissions to the bucket).
 Scrape one group from 2022-02-28 to 2022-03-01 and upload everything to a S3 Bucket named MY_BUCKET (NOTE: -c will delete every file downloaded/generated locally):
+
 ```
 inv scrape-groups --targets=MySecretGroup -f 2022-02-28 -t 2022-03-01 -v -u -b MY_BUCKET -c
 ```
@@ -77,41 +92,3 @@ Run it:
 ```
 tg scrape-groups --targets=MySecretGroup -f 2022-02-28 -t 2022-03-01 -v
 ```
-
-## AWS ECS (Docker compose)
-
-The tool can also be run on a ECS Container Task with docker compose. Follow the instructions at https://docs.docker.com/cloud/ecs-integration/ to set up your docker instance (specifically setup your AWS credentials, create your ECS context and set up your Image Repository credentials on AWS Secret Manager).
-
-Then create an .env file for Docker compose with the following variables (fill with your own values):
-```
-AWS_REGION=XXXXXXX
-AWS_ACCESS_KEY_ID=XXXXXXXX
-AWS_SECRET_ACCESS_KEY=XXXXXXXXX
-API_PHONE_NUMBER=XXXXXXXXXX
-API_ID=XXXXXXXX
-API_HASH=XXXXXXXX
-TG_GROUPS=MySecretGroup,MyOtherSecretGroup
-FROM_DATE=XXXXXXX
-TO_DATE=XXXXXXXXXX
-S3_BUCKET=XXXXXXXXX
-IMAGE=myuser/tg-scrapper:latest
-IMAGE_REPO_SM=arn:aws:secretsmanager:XXXXXXXXXXXXX
-```
-
-Build your image:
-```
-docker build -f Dockerfile -t myuser/tg-scrapper:latest .
-```
-NOTE: if you are building from an ARM device pass ```--platform linux/amd64``` to avoid issues.
-
-Push your image to your repository:
-```
-docker image push myuser/tg-scrapper:latest
-```
-
-Then create your ECS cluster with the following command:
-```
-docker compose --env-file .env --file docker-compose.yml up
-```
-
-Please note that this might not be an efficient approach of running long tasks/jobs and is prone to failures. Use at your own risk.
