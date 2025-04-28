@@ -52,7 +52,6 @@ def dump_member_list(c, group):
     'bucket': "S3 Bucket to upload messages & media (requires upload flag)",
     'upload': "Flag to indicate that outputs need to be uploaded \
             (requires bucket)",
-    'cleanup': "Delete all files when done",
     'skip_media': "Skip downloading media",
     'use_db': "Use sqlite database to store messages",
     'verbose': "Output additional info",
@@ -63,7 +62,6 @@ def scrape_groups(c,
                   targets="",
                   bucket=None,
                   upload=False,
-                  cleanup=False,
                   skip_media=False,
                   use_db=False,
                   verbose=False):
@@ -80,7 +78,6 @@ def scrape_groups(c,
         groups,
         s3_upload=upload,
         bucket_name=bucket,
-        post_cleanup=cleanup,
         skip_media=skip_media,
         use_db=use_db,
     )

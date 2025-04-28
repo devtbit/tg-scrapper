@@ -5,7 +5,12 @@ from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
 from telethon.tl.functions.channels import (
         GetParticipantsRequest, GetChannelsRequest)
-from telethon.tl.types import InputPeerEmpty, ChannelParticipantsRecent
+from telethon.tl.types import (
+    InputPeerEmpty,
+    ChannelParticipantsRecent,
+    MessageMediaPhoto,
+    MessageMediaDocument,
+)
 from telethon.utils import get_display_name
 
 from utils import process_date
@@ -140,12 +145,29 @@ class Telegram:
         self.current_group = group
         return self.client.iter_messages(group, offset_date=offset_date)
 
-    async def download_message_media(self, message, location):
+    async def download_message_media_to_file(self, message, location):
         media_path = await message.download_media(file=location)
         if media_path is None:
             return None, None
         base_name = os.path.basename(media_path)
         return media_path, base_name
+
+    async def download_message_media(self, message):
+        blob = await self.client.download_media(message, bytes)
+        return blob, self.process_media_name(message)
+
+    def process_media_name(self, message):
+        if not message.media:
+            return None
+
+        if isinstance(message.media, MessageMediaPhoto):
+            return f"{message.id}_{message.media.photo.id}.jpg"
+        elif isinstance(message.media, MessageMediaDocument):
+            doc_mime_type = message.media.document.mime_type
+            doc_type = doc_mime_type.split('/')[1]
+            return f"{message.id}_{message.media.document.id}.{doc_type}"
+        else:
+            raise Exception('Unsupported media type')
 
     def get_credentials():
         return {

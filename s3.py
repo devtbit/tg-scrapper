@@ -13,3 +13,10 @@ class S3:
             self.bucket,
             object_name,
         )
+
+    def upload_bytes(self, object_name, bytes):
+        return self.client.put_object(
+            Bucket=self.bucket,
+            Key=object_name,
+            Body=bytes,
+        )

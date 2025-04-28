@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import datetime
-import os
-import shutil
 
 from telegram import Telegram
 from s3 import S3
@@ -24,7 +22,6 @@ class Scrapper:
                  target_groups=[],
                  s3_upload=False,
                  bucket_name=None,
-                 post_cleanup=False,
                  skip_media=False,
                  use_db=False,
                  date_range=None):
@@ -33,7 +30,7 @@ class Scrapper:
         self.bucket = None
         if s3_upload:
             self.bucket = S3(bucket_name)
-        self.post_cleanup = post_cleanup
+            self.bucket_name = bucket_name
         self.date_range = date_range
         self.timestamp = datetime.datetime.now().strftime("%Y_%m_%d-%H_%M")
         self.group = None
@@ -101,8 +98,6 @@ class Scrapper:
                 self.bucket.upload(
                         f"{self.group}/{prefix}_members_archive.csv",
                         csv_archive)
-                if self.post_cleanup:
-                    os.remove(csv_archive)
         else:
             print("memberlist not available")
 
@@ -135,17 +130,22 @@ class Scrapper:
         filename = None
         if message.media:
             _, fileprefix, prefix = self.get_workspace()
-            media, filename = await self.telegram.download_message_media(
-                    message,
-                    f"{fileprefix}_media")
+
+            if self.bucket:
+                media, filename = await self.telegram.download_message_media(
+                    message)
+                if media is not None:
+                    object_name = f"{self.group}/{prefix}_media/{filename}"
+                    self.bucket.upload_bytes(
+                        object_name,
+                        media)
+                    filename = f"s3://{self.bucket_name}/{object_name}"
+            else:
+                media, filename = await self.telegram.download_message_media_to_file(  # noqa
+                        message,
+                        f"{fileprefix}_media")
             if media is None:
                 return None
-            # filename = f"{message.id}_{filename}"
-            object_name = f"{self.group}/{prefix}_media/{filename}"
-            if self.bucket:
-                self.bucket.upload(object_name, media)
-                if self.post_cleanup:
-                    os.remove(media)
         return filename
 
     async def process_message(self, message, verbose=False):
@@ -218,8 +218,6 @@ class Scrapper:
             if len(rows) > 0:
                 self.bucket.upload(
                         f"{group}/{prefix}_archive.csv", csv_archive)
-                if self.post_cleanup:
-                    shutil.rmtree(directory)
             elif verbose:
                 print("nothing to upload")
         if verbose:

@@ -68,10 +68,10 @@ You can specify a custom path with the environment variable `TG_DB_NAME`
 #### Uploading to S3
 
 The next command requires AWS CLI with credentials configured (note that account only requires PutObject permissions to the bucket).
-Scrape one group from 2022-02-28 to 2022-03-01 and upload everything to a S3 Bucket named MY_BUCKET (NOTE: -c will delete every file downloaded/generated locally):
+Scrape one group from 2022-02-28 to 2022-03-01 and upload everything to a S3 Bucket named MY_BUCKET:
 
 ```
-inv scrape-groups --targets=MySecretGroup -f 2022-02-28 -t 2022-03-01 -v -u -b MY_BUCKET -c
+inv scrape-groups --targets=MySecretGroup -f 2022-02-28 -t 2022-03-01 -v -u -b MY_BUCKET
 ```
 
 ## Docker
